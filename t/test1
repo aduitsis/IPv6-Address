@@ -1,0 +1,123 @@
+#!/usr/bin/perl 
+
+use warnings;
+use strict;
+use Test::More qw(no_plan);
+
+BEGIN {
+	use_ok("IPv6Address");
+}
+
+my %addresses =	(
+	"2001:648:2000::/48" => "2001:648:2000::/48",
+	"0:0:1:0:0:1:1:1/48" => "0:0:1::1:1:1/48",
+	"::1/48" => "::1/48",
+	"1::/48" => "1::/48",
+	"0:0:1:1:0:0:1:1/48" => "0:0:1:1::1:1/48",
+	"1:1:0:0:1:1:0:0/48" => "1:1:0:0:1:1::/48",
+	"::/8" => "::/8",
+	"1:1:0:0:1:1:0:0/48" => "1:1:0:0:1:1::/48",
+	"0:0:1:1:1:1:0:0/48" => "0:0:1:1:1:1::/48",
+);
+
+for my $address_str (keys %addresses) {
+	my $ipv6 = IPv6Address->new($address_str);
+	isa_ok($ipv6,"IPv6Address");
+	ok($ipv6 eq $addresses{$address_str},"stringify check");
+	#print $ipv6->string," ",$addresses{$address_str},"\n";
+}
+	
+my $ipv6 = IPv6Address->new("2001:648:2000:de::210/64");
+#print $ipv6->string(ipv4=>1,nocompress=>1),"\n";
+ok($ipv6->string(ipv4=>1,nocompress=>1),"stringify without compression test");
+
+
+#multicast test
+my $m_ipv6 = IPv6Address->new("FF02:0:0:0:0:0:0:6/10");
+isa_ok($m_ipv6,"IPv6Address");
+ok($m_ipv6->is_multicast,"multicast check");
+ok(!$ipv6->is_multicast,"multicast check 2");
+
+ok(IPv6Address->new("::/128")->is_unspecified,"unspecified address");
+ok(IPv6Address->new("::/8")->is_unspecified,"unspecified address 2");
+ok(IPv6Address->new("::1/128")->is_loopback,"loopback address");
+ok(IPv6Address->new("::1/8")->is_loopback,"loopback address 2");
+
+my $prefix = IPv6Address->new("2001:648:2001::/49");
+isa_ok($prefix,'IPv6Address');
+is($prefix->enumerate_with_IPv4('147.102.136.25',0x00007fff)->string,'2001:648:2001:819::/64','Enumerate IPv6 address using an IPv4 number plus an arbitrary mask');
+
+#IPv4Subnet tests
+
+my $b1 = IPv4Subnet->new('147.102.136.0/21');
+isa_ok($b1,'IPv4Subnet');
+ok($b1->contains('147.102.136.0'),'147.102.136.0/21 contains 147.102.136.0');
+ok($b1->contains('147.102.136.255'),'147.102.136.0/21 contains 147.102.136.255');
+ok($b1->contains('147.102.137.0'),'147.102.136.0/21 contains 147.102.137.0');
+ok($b1->contains('147.102.143.255'),'147.102.136.0/21 contains 147.102.143.255');
+ok(!$b1->contains('147.102.144.0'),'147.102.136.0/21 does not contain 147.102.144.0');
+
+my $b2 = IPv4Subnet->new('0.0.0.0/0');
+isa_ok($b2,'IPv4Subnet');
+is($b2->get_length,4294967296,'0.0.0.0/0 length is 2^32');
+is($b2->get_start,0,'0.0.0.0/0 starts at 0');
+is($b2->get_stop,4294967295,'0.0.0.0/0 ends at 4294967295');
+ok($b2->contains('1.2.3.4'),'0.0.0.0/0 contains anything');
+ok($b2->contains('0.0.0.0'),'0.0.0.0/0 contains anything');
+
+my $b3 = IPv4Subnet->new('10.10.10.10/32');
+isa_ok($b3,'IPv4Subnet');
+is($b3->get_length,1,'$b3 length is 1');
+is($b3->get_start,168430090,'10.10.10.10/32 starts at 168430090');
+is($b3->get_stop,168430090,'10.10.10.10/32 stops at 168430090');
+
+my $block1 = [ '147.102.136.0/21' ];
+my $block2 = [ '10.0.0.0/24', '10.10.0.0/24' ];
+my $block3 = [ '87.239.232.0/21', '84.38.0.0/20' ];
+
+is(IPv4Subnet::calculate_compound_offset('147.102.136.0',$block1),0);
+is(IPv4Subnet::calculate_compound_offset('147.102.136.1',$block1),1);
+is(IPv4Subnet::calculate_compound_offset('147.102.137.0',$block1),256);
+is(IPv4Subnet::calculate_compound_offset('147.102.137.1',$block1),257);
+is(IPv4Subnet::calculate_compound_offset('147.102.143.255',$block1),2047);
+
+
+is(IPv4Subnet::calculate_compound_offset('10.0.0.0',$block2),0);
+is(IPv4Subnet::calculate_compound_offset('10.0.0.1',$block2),1);
+is(IPv4Subnet::calculate_compound_offset('10.0.0.255',$block2),255);
+is(IPv4Subnet::calculate_compound_offset('10.10.0.0',$block2),256);
+is(IPv4Subnet::calculate_compound_offset('10.10.0.255',$block2),511);
+
+is(IPv4Subnet::calculate_compound_offset('87.239.232.0',$block3),0);
+is(IPv4Subnet::calculate_compound_offset('87.239.239.255',$block3),2047);
+is(IPv4Subnet::calculate_compound_offset('84.38.0.0',$block3),2048);
+
+
+my $p1 = IPv6Address->new('2001:648:2001::/48');
+my $p2 = IPv6Address->new('2001:648:2001::/49');
+my $p3 = IPv6Address->new('2001:648:2001:beef::/64');
+isa_ok($p1,'IPv6Address');
+is($p1->enumerate_with_offset(0,64),'2001:648:2001::/64');
+is($p2->enumerate_with_offset(0,64),'2001:648:2001::/64');
+is($p1->enumerate_with_offset(15,64),'2001:648:2001:f::/64');
+is($p2->enumerate_with_offset(255,64),'2001:648:2001:ff::/64');
+is($p1->enumerate_with_offset(65535,64),'2001:648:2001:ffff::/64');
+is($p2->enumerate_with_offset(4095,64),'2001:648:2001:fff::/64');
+
+eval {
+is($p2->enumerate_with_offset(65535,64),'2001:648:2001:ffff::/64');
+};
+ok($@,'enumerate with offset larger than the set bit length should fail');
+ 
+
+is($p1->radius_string,'0x0030200106482001',"radius representation");
+is($p2->radius_string,'0x003120010648200100',"radius representation");
+is($p3->radius_string,'0x0040200106482001beef',"radius representation");
+
+
+
+
+
+
+
+
