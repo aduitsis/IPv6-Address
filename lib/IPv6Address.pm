@@ -278,6 +278,14 @@ sub get_stop {
 	return $_[0]->{stop};
 }
 
+sub get_start_ip {
+	return my_ntoa($_[0]->{start});
+}
+
+sub get_stop_ip {
+	return my_ntoa($_[0]->{stop});
+}
+
 sub get_length {
 	return $_[0]->get_stop - $_[0]->get_start + 1;
 }
