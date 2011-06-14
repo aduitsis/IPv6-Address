@@ -94,6 +94,17 @@ sub to_str {
 	return join('',unpack("B128",$bitstr));
 }
 
+sub contains {
+	defined( my $self = shift(@_) ) or die 'incorrect call';
+	defined( my $other = shift(@_) ) or die 'incorrect call';
+	if (ref($other) eq '') {
+		$other = IPv6Address->new($other);
+	}
+	return if ($self->get_prefixlen > $other->get_prefixlen);
+	return 1 if (substr($self->get_bitstr,0,$self->get_prefixlen) eq substr($other->get_bitstr,0,$self->get_prefixlen));
+	return;
+}
+
 #returns the address part (2001:648:2000:0000:0000....)
 sub addr_string {
 	my $self = shift(@_);
