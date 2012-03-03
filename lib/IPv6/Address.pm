@@ -1,9 +1,12 @@
-package IPv6Address;
+package IPv6::Address;
+
+# ABSTRACT: IPv6 Address class
 
 use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
+use Sub::Install;
 use overload 
 	'""' => \&to_string,
 	fallback => 1;
@@ -15,8 +18,6 @@ sub debug {
 	$DEBUG&&print STDERR "\n";
 	
 }
-
-
 
 #takes a normal address as argument. Example 2001:648:2000::/48
 sub new {
@@ -98,7 +99,7 @@ sub contains {
 	defined( my $self = shift(@_) ) or die 'incorrect call';
 	defined( my $other = shift(@_) ) or die 'incorrect call';
 	if (ref($other) eq '') {
-		$other = IPv6Address->new($other);
+		$other = __PACKAGE__->new($other);
 	}
 	return if ($self->get_prefixlen > $other->get_prefixlen);
 	return 1 if (substr($self->get_bitstr,0,$self->get_prefixlen) eq substr($other->get_bitstr,0,$self->get_prefixlen));
@@ -110,21 +111,21 @@ sub addr_string {
 	my $self = shift(@_);
 	my $str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnnnn",from_str($self->get_bitstr))) );
 	#print Dumper(@_);
-	my %option = (@_)? (@_) : (8,9,10,11) ;
+	my %option = (@_) ;
 	#print Dumper(\%option);
 	if (defined($option{ipv4})&&$option{ipv4}) {
 		my $str2 = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnnnn",from_str($self->get_bitstr))) );
 		###print "string:",$str,"\n";
-		$str = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnn",from_str($self->get_bitstr))) ).'.'.join('.',  map {sprintf("%d",hex $_)} ($str2 =~ /([0-9A-Fa-f]{2})([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})+$/));
+		$str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnn",from_str($self->get_bitstr))) ).':'.join('.',  map {sprintf("%d",hex $_)} ($str2 =~ /([0-9A-Fa-f]{2})([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/));
 		#print STDERR $ipv4,"\n";
 		
 	}
-	#print $str,"\n";
+	#print 'DEBUG:' . $str,"\n";
 	return $str if defined(($option{nocompress})&&$option{nocompress});
 	return '::' if($str eq '0:0:0:0:0:0:0:0');
 	for(my $i=7;$i>1;$i--) {
 		my $zerostr = join(':',split('','0'x$i));
-		#print "DEBUG: $str $zerostr \n";
+		###print "DEBUG: $str $zerostr \n";
 		if($str =~ /:$zerostr$/) {
 			$str =~ s/:$zerostr$/::/;
 			return $str;
@@ -187,12 +188,17 @@ my %binary_patterns = (
 );
 
 
-no strict 'refs';
 for my $item (keys %patterns) {
-	*{"is_".$item} = sub {
-		return ( shift(@_)->addr_string =~ /$patterns{$item}/i )? 1 : 0;
-	};
+	Sub::Install::install_sub({
+		code => sub {
+			return ( shift(@_)->addr_string =~ /$patterns{$item}/i )? 1 : 0;
+		},
+		into => __PACKAGE__,
+		as => 'is_'.$item,
+	});
 }
+
+
 
 use strict;
 
@@ -213,8 +219,8 @@ sub ipv4_to_binarray {
 
 
 #takes an IPv4 address and uses a part of it to enumerate inside the Ipv6 prefix of the object
-#example: IP6Address->new('2001:648:2001::/48')->enumerate_with_IPv4('0.0.0.1',0x0000ffff) will wield 2001:648::2001:0001::/64
-#the return value will be a new IPv6Address object, so the original object remains intact
+#example: __PACKAGE__->new('2001:648:2001::/48')->enumerate_with_IPv4('0.0.0.1',0x0000ffff) will wield 2001:648::2001:0001::/64
+#the return value will be a new IPv6::Address object, so the original object remains intact
 sub enumerate_with_IPv4 {
 	my ($self,$IPv4,$mask) = (@_) or die 'Incorrect call';
 	my $binmask = sprintf "%032b",$mask;
@@ -278,7 +284,7 @@ sub new {
 	my $start = my_aton($ip);
 	my $stop = $start + $length - 1;
 	#$DEBUG && print STDERR "$start - $stop \n";
-	return bless { start => $start, stop => $stop , length_n => $length_n, length => $length, ip => $ip };
+	return bless { start => $start, stop => $stop , length_n => $length_n, length => $length, ip => $ip },$class;
 }
 
 sub get_start {
