@@ -91,6 +91,20 @@ is(IPv4Subnet::calculate_compound_offset('10.0.0.255',$block2),255);
 is(IPv4Subnet::calculate_compound_offset('10.10.0.0',$block2),256);
 is(IPv4Subnet::calculate_compound_offset('10.10.0.255',$block2),511);
 
+is(IPv4Subnet->new('0.0.0.0/24')->get_mask,'255.255.255.0','/24 netmask');
+is(IPv4Subnet->new('0.0.0.0/32')->get_mask,'255.255.255.255','/32 netmask');
+is(IPv4Subnet->new('0.0.0.0/16')->get_mask,'255.255.0.0','/16 netmask');
+is(IPv4Subnet->new('0.0.0.0/30')->get_mask,'255.255.255.252','/30 netmask');
+is(IPv4Subnet->new('0.0.0.0/0')->get_mask,'0.0.0.0','/0 netmask');
+is(IPv4Subnet->new('0.0.0.0/1')->get_mask,'128.0.0.0','/1 netmask');
+
+is(IPv4Subnet->new('0.0.0.0/24')->get_wildcard,'0.0.0.255','/24 wildcard');
+is(IPv4Subnet->new('0.0.0.0/32')->get_wildcard,'0.0.0.0','/32 wildcard');
+is(IPv4Subnet->new('0.0.0.0/16')->get_wildcard,'0.0.255.255','/16 wildcard');
+is(IPv4Subnet->new('0.0.0.0/30')->get_wildcard,'0.0.0.3','/30 wildcard');
+is(IPv4Subnet->new('0.0.0.0/0')->get_wildcard,'255.255.255.255','/0 wildcard');
+is(IPv4Subnet->new('0.0.0.0/1')->get_wildcard,'127.255.255.255','/1 wildcard');
+################
 
 my $p1 = IPv6::Address->new('2001:648:2001::/48');
 my $p2 = IPv6::Address->new('2001:648:2001::/49');

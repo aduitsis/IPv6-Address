@@ -287,6 +287,7 @@ sub new {
 	return bless { start => $start, stop => $stop , length_n => $length_n, length => $length, ip => $ip },$class;
 }
 
+
 sub get_start {
 	return $_[0]->{start};
 }
@@ -305,6 +306,23 @@ sub get_stop_ip {
 
 sub get_length {
 	return $_[0]->get_stop - $_[0]->get_start + 1;
+}
+
+sub get_length_n {
+	return $_[0]->{length_n};
+}
+
+sub get_mask_long {
+	($_[0]->get_length_n == 0 )?
+		0 : hex('0xffffffff') << ( 32 - $_[0]->get_length_n )  ;
+}	
+
+sub get_mask {
+	my_ntoa( $_[0]->get_mask_long );
+}
+
+sub get_wildcard {
+	my_ntoa( ~ $_[0]->get_mask_long );
 }
 
 sub my_aton {
