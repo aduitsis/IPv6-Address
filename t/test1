@@ -104,6 +104,13 @@ is(IPv4Subnet->new('0.0.0.0/16')->get_wildcard,'0.0.255.255','/16 wildcard');
 is(IPv4Subnet->new('0.0.0.0/30')->get_wildcard,'0.0.0.3','/30 wildcard');
 is(IPv4Subnet->new('0.0.0.0/0')->get_wildcard,'255.255.255.255','/0 wildcard');
 is(IPv4Subnet->new('0.0.0.0/1')->get_wildcard,'127.255.255.255','/1 wildcard');
+
+is(IPv4Subnet->new('10.20.30.40/24')->get_start_ip,'10.20.30.0','start IP of 10.20.30.40/24');
+is(IPv4Subnet->new('10.20.30.40/24')->get_stop_ip,'10.20.30.255','stop IP of 10.20.30.40/24');
+is(IPv4Subnet->new('10.20.30.40/32')->get_start_ip,'10.20.30.40','start IP of 10.20.30.40/24');
+is(IPv4Subnet->new('10.20.30.40/32')->get_stop_ip,'10.20.30.40','stop IP of 10.20.30.40/24');
+is(IPv4Subnet->new('10.20.30.40/0')->get_start_ip,'0.0.0.0','start IP of 10.20.30.40/24');
+is(IPv4Subnet->new('10.20.30.40/0')->get_stop_ip,'255.255.255.255','stop IP of 10.20.30.40/24');
 ################
 
 my $p1 = IPv6::Address->new('2001:648:2001::/48');

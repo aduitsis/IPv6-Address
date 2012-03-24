@@ -280,49 +280,48 @@ sub new {
 	defined ( my $class = shift ) or die "missing class";
 	defined ( my $str = shift ) or die "missing string";
 	my ( $ip , $length_n ) = ( $str =~ /^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/ ) or croak 'Cannot parse $str';
-	my $length = 2**(32-$length_n);
-	my $start = my_aton($ip);
-	my $stop = $start + $length - 1;
-	#$DEBUG && print STDERR "$start - $stop \n";
-	return bless { start => $start, stop => $stop , length_n => $length_n, length => $length, ip => $ip },$class;
+	bless { ip_n => my_aton($ip) , length_n => $length_n } , $class	;
 }
 
+sub get_ip_n {
+	return $_[0]->{ip_n} ;
+}
 
 sub get_start {
-	return $_[0]->{start};
+	return $_[0]->get_ip_n & $_[0]->get_mask_n;
 }
 
 sub get_stop {
-	return $_[0]->{stop};
+	return $_[0]->get_start + $_[0]->get_length - 1;
 }
 
 sub get_start_ip {
-	return my_ntoa($_[0]->{start});
+	return my_ntoa($_[0]->get_start);
 }
 
 sub get_stop_ip {
-	return my_ntoa($_[0]->{stop});
+	return my_ntoa($_[0]->get_stop);
 }
 
 sub get_length {
-	return $_[0]->get_stop - $_[0]->get_start + 1;
+	return 2**(32-$_[0]->get_length_n);
 }
 
 sub get_length_n {
 	return $_[0]->{length_n};
 }
 
-sub get_mask_long {
+sub get_mask_n {
 	($_[0]->get_length_n == 0 )?
 		0 : hex('0xffffffff') << ( 32 - $_[0]->get_length_n )  ;
 }	
 
 sub get_mask {
-	my_ntoa( $_[0]->get_mask_long );
+	my_ntoa( $_[0]->get_mask_n );
 }
 
 sub get_wildcard {
-	my_ntoa( ~ $_[0]->get_mask_long );
+	my_ntoa( ~ $_[0]->get_mask_n );
 }
 
 sub my_aton {
