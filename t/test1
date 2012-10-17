@@ -116,6 +116,8 @@ is(IPv4Subnet->new('10.20.30.40/0')->get_stop_ip,'255.255.255.255','stop IP of 1
 my $p1 = IPv6::Address->new('2001:648:2001::/48');
 my $p2 = IPv6::Address->new('2001:648:2001::/49');
 my $p3 = IPv6::Address->new('2001:648:2001:beef::/64');
+my $p4 = IPv6::Address->new('2001:648:2001:be00::/56');
+my $p5 = IPv6::Address->new('2001:648:2001:beef::/128');
 isa_ok($p1,'IPv6::Address');
 is($p1->enumerate_with_offset(0,64),'2001:648:2001::/64');
 is($p2->enumerate_with_offset(0,64),'2001:648:2001::/64');
@@ -165,4 +167,38 @@ is(IPv6::Address->new('2001:648:2001::/48')->contains('2001:648:2001::/48'),1,'2
 is(IPv6::Address->new('2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/48')->contains('2001:648:2001::/48'),1,'2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/48 contains 2001:648:2001::/48');
 is(IPv6::Address->new('2001:648:2001::/48')->contains('2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/48'),1,'2001:648:2001::/48 contains 2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/48');
 is(IPv6::Address->new('2001:648:2001::/48')->contains('2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/128'),1,'2001:648:2001::/48 contains 2001:648:2001:aaaa:bbbb:cccc:dddd:eeee/128');
+
+eval {
+	is($p2->enumerate_with_offset(65535,64),'2001:648:2001:ffff::/64');
+};
+ok($@,'enumerate with offset larger than the set bit length should fail');
+
+
+is($p1->radius_string,'0x0030200106482001',"radius representation");
+is($p2->radius_string,'0x003120010648200100',"radius representation");
+is($p3->radius_string,'0x0040200106482001beef',"radius representation");
+
+
+eval { IPv6::Address->new('::/0')->increment(43847) } ;
+like($@,qr/cannot offset/,'Trying to increment a /0 fails');
+
+is($p1->increment(0),'2001:648:2001::/48', 'increment a /48 by 0');
+is($p1->increment(1),'2001:648:2002::/48', 'increment a /48 by 1');
+is($p1->increment(255),'2001:648:2100::/48', 'increment a /48 by 255');
+is($p1->increment(65535),'2001:649:2000::/48', 'increment a /48 by 65535');
+eval {
+	is($p1->increment(4294967295),'2002:649:2000::/48', 'increment a /48 by 2^32-1')
+};
+like($@,qr/address part exceeded/,'Try to increment 2001:648:2001::/48 by 2^32-1 should fail');
+is(IPv6::Address->new('2001::/48')->increment(4294967295),'2001:ffff:ffff::/48', 'increment a /48 by 2^32-1 should fail except some rare cases');
+
+is($p4->increment(0),'2001:648:2001:be00::/56', 'increment a /56 by 0');
+is($p4->increment(1),'2001:648:2001:bf00::/56', 'increment a /56 by 1');
+is($p4->increment(255),'2001:648:2002:bd00::/56', 'increment a /56 by 255');
+is($p4->increment(65535),'2001:648:2101:bd00::/56', 'increment a /56 by 65535');
+
+is($p5->increment(0),'2001:648:2001:beef::/128', 'increment a /128 by 0');
+is($p5->increment(1),'2001:648:2001:beef::1/128', 'increment a /128 by 1');
+is($p5->increment(255),'2001:648:2001:beef::ff/128', 'increment a /128 by 255');
+is($p5->increment(65535),'2001:648:2001:beef::ffff/128', 'increment a /128 by 65535');
 

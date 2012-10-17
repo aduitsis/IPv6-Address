@@ -256,6 +256,46 @@ sub enumerate_with_offset {
 	return __PACKAGE__->raw_new($new_bitstr,$desired_length);
 }
 
+sub increment {
+	my ( $self , $offset ) = (@_) or die 'Incorrect call';
+
+	my $max_int = 2**32-1;
+	die 'Sorry, offsets beyond 2^32-1 are not acceptable' if( $offset > $max_int );
+	die 'Sorry, cannot offset a /0 prefix. ' if ( $self->get_prefixlen == 0 );
+
+	my $new_bitstr = $self->get_bitstr; #will use it to store the new bitstr
+
+	$DEBUG && print STDERR "Original bitstring is $new_bitstr\n";
+
+	# 0..127
+	my $start = ($self->get_prefixlen>=32)? $self->get_prefixlen - 32 : 0 ;
+	my $len = $self->get_prefixlen - $start;
+
+	$DEBUG && print STDERR "will replace from pos $start (from 0) and for $len len\n";
+
+	# extract start..start+len part, 0-pad to 32 bits, pack into a network byte order $n
+	my $n = unpack('N',pack('B32',sprintf("%0*s",32,substr($new_bitstr, $start , $len ))));
+
+	$DEBUG && print STDERR "Original n=".$n."\n";
+	$n += $offset;
+	$DEBUG && print STDERR "Result n=".$n."\n";
+
+	die "Sorry, address part exceeded $max_int" if( $n > $max_int ); #just a precaution
+
+	# repack the $n into a 32bit network ordered integer, convert into "1000101010101..." string
+	my $bstr = unpack( "B32", pack( 'N' , $n )  );
+
+	$DEBUG && print STDERR "Replacement bitstr is $bstr\n";
+	die 'internal error. Address should be 32-bits long' unless (length($bstr) == 32); #another precaution
+			
+	#replace into new_bitstr from start and for len with bstr up for len bytes counting from the *end*
+	substr( $new_bitstr , $start , $len ) = substr( $bstr, - $len); 
+
+	# result is ready, return it
+	return __PACKAGE__->raw_new($new_bitstr,$self->get_prefixlen);
+}
+
+
 sub radius_string {
 	defined(my $self = shift) or die 'Missing argument';
 	#Framed-IPv6-Prefix := 0x0040200106482001beef
