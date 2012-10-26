@@ -202,3 +202,26 @@ is($p5->increment(1),'2001:648:2001:beef::1/128', 'increment a /128 by 1');
 is($p5->increment(255),'2001:648:2001:beef::ff/128', 'increment a /128 by 255');
 is($p5->increment(65535),'2001:648:2001:beef::ffff/128', 'increment a /128 by 65535');
 
+
+ok( $p1->n_cmp($p2) == 0 , 'equality of prefixes with method');
+ok( $p2->n_cmp($p4) < 0 , 'prefix smaller that another prefix with method');
+ok( $p5->n_cmp($p4) > 0 , 'prefix bigger than another prefix with method');
+
+ok( ( $p1 <=> $p2 ) == 0 , 'equality of prefixes with 3-way comparison operator');
+ok( ( $p2 <=> $p4 ) < 0 , 'prefix smaller that another prefix with 3-way comparison operator');
+ok( ( $p5 <=> $p4 ) > 0 , 'prefix bigger than another prefix with 3-way comparison operator');
+
+ok(  $p1 == $p2  , 'equality of prefixes with normal operator');
+ok( $p2 < $p4  , 'prefix smaller that another prefix with normal operator');
+ok( $p5 > $p4 , 'prefix bigger than another prefix with normal operator');
+
+
+my @a = IPv6::Address::n_sort( $p1, $p2, $p3, $p4, $p5 );
+ok( ( $a[0] == $p1 ) && ( $a[1] == $p2 ) && ( $a[2] == $p4 ) && ( $a[3] == $p3 ) && ( $a[4] == $p5 ) , 'sort array of prefixes');
+
+#reminder
+#my $p1 = IPv6::Address->new('2001:648:2001::/48');
+#my $p2 = IPv6::Address->new('2001:648:2001::/49');
+#my $p3 = IPv6::Address->new('2001:648:2001:beef::/64');
+#my $p4 = IPv6::Address->new('2001:648:2001:be00::/56');
+#my $p5 = IPv6::Address->new('2001:648:2001:beef::/128');

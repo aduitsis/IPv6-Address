@@ -7,8 +7,10 @@ use warnings;
 use Carp;
 use Data::Dumper;
 use Sub::Install;
+
 use overload 
 	'""' => \&to_string,
+	'<=>' => \&n_cmp,
 	fallback => 1;
 	
 my $DEBUG = 0;
@@ -295,6 +297,56 @@ sub increment {
 	return __PACKAGE__->raw_new($new_bitstr,$self->get_prefixlen);
 }
 
+sub nxx_parts {
+	( unpack($_[1],from_str($_[0]->get_bitstr))  )
+}
+
+#@TODO add tests for this method
+sub n16_parts {
+	( $_[0]->nxx_parts('nnnnnnnn') )
+}
+
+#@TODO add tests for this method
+sub n32_parts {
+	( $_[0]->nxx_parts('NNNN') )
+}
+
+#@TODO add tests for this method
+sub n_cmp { 
+	my @a = $_[0]->n32_parts;
+	my @b = $_[1]->n32_parts;
+	for ( 0 .. 3 ) {
+		my $cmp = ( $a[$_] <=> $b[$_] ); 
+		return $cmp if ( $cmp != 0 );
+	} 
+	return 0;
+}
+
+sub n_sort { 
+	return sort { $a <=> $b } @_;
+}
+
+sub increment_multiple_prefixes {
+	defined( my $offset = shift ) or die 'incorrect call';
+	my %prefixes = @_ or confess 'no prefixes given';
+	my %real_prefixes = map { $_ => IPv6::Address->new( $_ ) } keys %prefixes;
+	my @sorted_prefixes = sort { $real_prefixes{$a} <=> $real_prefixes{$b} } keys %prefixes;
+
+	my $offset_orig = $offset;
+
+	for( @sorted_prefixes ) {
+		my $length = $prefixes{ $_ };
+		if( 1 + $offset >  $length   ) {
+			$offset -= $length ;
+			next;
+		}
+		else {
+			my $ipv6 = $real_prefixes{ $_ } ;
+			return $ipv6->increment( $offset );
+		}
+	}
+	die "cannot increment offset $offset_orig on ".join(',',@sorted_prefixes);
+}
 
 sub radius_string {
 	defined(my $self = shift) or die 'Missing argument';
