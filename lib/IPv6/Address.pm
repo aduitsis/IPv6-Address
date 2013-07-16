@@ -85,6 +85,26 @@ sub bitstr_and {
 	return $c;
 }
 
+#takes two bitstrs as arguments and returns their logical or as bitstr
+sub bitstr_or {
+	my ($a,$b) = (@_);
+	my $c='';
+	for(my $i=0;$i<128;$i++) {
+		substr($c,$i) = ((substr($a,$i,1) eq '1') || (substr($b,$i,1) eq '1'))? 1 : 0;
+	}
+	return $c;
+}
+
+#takes a bitstr and inverts it
+sub bitstr_not {
+	defined( my $bitstr = shift ) // confess 'missing argument';
+	my $c =  '';
+	for(my $i=0;$i<128;$i++) {
+		substr($c,$i) = (substr($bitstr,$i,1) eq '1')? 0 : 1;
+	}
+	return $c;
+}
+
 #converts a bitstr (111010010010....)  to a binary string 
 sub from_str {
 	my $str = shift(@_);
@@ -179,6 +199,16 @@ sub apply_mask {
 	$self->{bitstr} = bitstr_and($self->get_bitstr,$self->get_mask_bitstr);
 }	
 
+sub first_address {
+	my $bitstr = bitstr_and( $_[0]->get_bitstr , $_[0]->get_mask_bitstr );
+	IPv6::Address->raw_new( $bitstr, $_[0]->get_prefixlen);
+}
+
+sub last_address {
+	my $bitstr = bitstr_or( $_[0]->get_bitstr , bitstr_not( $_[0]->get_mask_bitstr ) );
+	IPv6::Address->raw_new( $bitstr, $_[0]->get_prefixlen);
+}
+	
 
 my %patterns = (
 	unspecified => "^::\$",

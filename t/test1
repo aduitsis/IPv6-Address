@@ -28,12 +28,16 @@ for my $address_str (keys %addresses) {
 }
 	
 my $ipv6 = IPv6::Address->new("2001:648:2000:de::210/64");
+
 is($ipv6->string(ipv4=>1,nocompress=>1),'2001:648:2000:de:0:0:0.0.2.16/64',"stringify without compression test");
 is($ipv6->string(ipv4=>1),'2001:648:2000:de::0.0.2.16/64',"stringify with IPv4");
 is($ipv6->string(nocompress=>1),'2001:648:2000:de:0:0:0:210/64',"stringify without compression");
 is($ipv6->string,'2001:648:2000:de::210/64',"stringify plain vanilla");
 
 is(IPv6::Address->new('::/64')->string(ipv4=>1),'::0.0.0.0/64','IPv4 compatible all zeros');
+
+is($ipv6->first_address->to_string,'2001:648:2000:de::/64','first address');
+is($ipv6->last_address->to_string,'2001:648:2000:de:ffff:ffff:ffff:ffff/64','first address');
 
 
 #multicast test
