@@ -29,6 +29,8 @@ for my $address_str (keys %addresses) {
 	
 my $ipv6 = IPv6::Address->new("2001:648:2000:de::210/64");
 
+is( unpack("B128", $ipv6->get_mask_bitstr), ('1'x64).('0'x64), 'check mask bitstring');
+
 is($ipv6->string(ipv4=>1,nocompress=>1),'2001:648:2000:de:0:0:0.0.2.16/64',"stringify without compression test");
 is($ipv6->string(ipv4=>1),'2001:648:2000:de::0.0.2.16/64',"stringify with IPv4");
 is($ipv6->string(nocompress=>1),'2001:648:2000:de:0:0:0:210/64',"stringify without compression");
@@ -38,7 +40,6 @@ is(IPv6::Address->new('::/64')->string(ipv4=>1),'::0.0.0.0/64','IPv4 compatible 
 
 is($ipv6->first_address->to_string,'2001:648:2000:de::/64','first address');
 is($ipv6->last_address->to_string,'2001:648:2000:de:ffff:ffff:ffff:ffff/64','first address');
-
 
 #multicast test
 my $m_ipv6 = IPv6::Address->new("FF02:0:0:0:0:0:0:6/10");

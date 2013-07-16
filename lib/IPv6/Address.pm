@@ -40,7 +40,7 @@ sub new {
 	
 	debug(join(":",map { sprintf "%04x",$_ } @parts));
 
-	my $bitstr = join('',map { sprintf "%016b",$_ } @parts);
+	my $bitstr = pack 'n8',@parts;
 	
 	return bless { 
 		bitstr => $bitstr,
@@ -70,39 +70,31 @@ sub get_prefixlen {
 
 #returns a 1111100000 corresponding to the prefix length
 sub get_mask_bitstr {
-	my $self = shift;
-	my $prefixlen = $self->get_prefixlen;
-	return '1'x$prefixlen.'0'x(128-$prefixlen);
+	generate_bitstr( $_[0]->get_prefixlen )
 }	
+
+sub get_masked_address_bitstr {
+	generate_bitstr( $_[0]->get_prefixlen ) & $_[0]->get_bitstr;
+}
+
+sub generate_bitstr { 
+	#TODO trick bellow is stupid ... fix
+	pack 'B128',join('',( ( map { '1' } ( 1 .. $_[0] ) ) , ( map { '0' } ( 1 .. 128-$_[0] ) ) ));
+}
 
 #takes two bitstrs as arguments and returns their logical or as bitstr
 sub bitstr_and {
-	my ($a,$b) = (@_);
-	my $c='';
-	for(my $i=0;$i<128;$i++) {
-		substr($c,$i) = ((substr($a,$i,1) eq '1') && (substr($b,$i,1) eq '1'))? 1 : 0;
-	}
-	return $c;
+	return $_[0] & $_[1]
 }
 
 #takes two bitstrs as arguments and returns their logical or as bitstr
 sub bitstr_or {
-	my ($a,$b) = (@_);
-	my $c='';
-	for(my $i=0;$i<128;$i++) {
-		substr($c,$i) = ((substr($a,$i,1) eq '1') || (substr($b,$i,1) eq '1'))? 1 : 0;
-	}
-	return $c;
+	return $_[0] | $_[1]
 }
 
 #takes a bitstr and inverts it
 sub bitstr_not {
-	defined( my $bitstr = shift ) // confess 'missing argument';
-	my $c =  '';
-	for(my $i=0;$i<128;$i++) {
-		substr($c,$i) = (substr($bitstr,$i,1) eq '1')? 0 : 1;
-	}
-	return $c;
+	return ~ $_[0]
 }
 
 #converts a bitstr (111010010010....)  to a binary string 
@@ -124,26 +116,27 @@ sub contains {
 		$other = __PACKAGE__->new($other);
 	}
 	return if ($self->get_prefixlen > $other->get_prefixlen);
-	return 1 if (substr($self->get_bitstr,0,$self->get_prefixlen) eq substr($other->get_bitstr,0,$self->get_prefixlen));
+	return 1 if $self->get_masked_address_bitstr eq ( generate_bitstr( $self->get_prefixlen ) & $other->get_bitstr );
+	#return 1 if (substr($self->get_bitstr,0,$self->get_prefixlen) eq substr($other->get_bitstr,0,$self->get_prefixlen));
 	return;
 }
 
 #returns the address part (2001:648:2000:0000:0000....)
 sub addr_string {
 	my $self = shift(@_);
-	my $str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnnnn",from_str($self->get_bitstr))) );
+	my $str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnnnn",$self->get_bitstr)) );
 	#print Dumper(@_);
 	my %option = (@_) ;
 	#print Dumper(\%option);
-	if (defined($option{ipv4})&&$option{ipv4}) {
-		my $str2 = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnnnn",from_str($self->get_bitstr))) );
+	if (defined($option{ipv4}) && $option{ipv4}) {
+		my $str2 = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnnnn",$self->get_bitstr)) );
 		###print "string:",$str,"\n";
-		$str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnn",from_str($self->get_bitstr))) ).':'.join('.',  map {sprintf("%d",hex $_)} ($str2 =~ /([0-9A-Fa-f]{2})([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/));
+		$str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnn",$self->get_bitstr)) ).':'.join('.',  map {sprintf("%d",hex $_)} ($str2 =~ /([0-9A-Fa-f]{2})([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/));
 		#print STDERR $ipv4,"\n";
 		
 	}
 	#print 'DEBUG:' . $str,"\n";
-	return $str if defined(($option{nocompress})&&$option{nocompress});
+	return $str if defined(($option{nocompress}) && $option{nocompress});
 	return '::' if($str eq '0:0:0:0:0:0:0:0');
 	for(my $i=7;$i>1;$i--) {
 		my $zerostr = join(':',split('','0'x$i));
@@ -250,6 +243,7 @@ sub ipv4_to_binarray {
 
 
 
+
 #takes an IPv4 address and uses a part of it to enumerate inside the Ipv6 prefix of the object
 #example: __PACKAGE__->new('2001:648:2001::/48')->enumerate_with_IPv4('0.0.0.1',0x0000ffff) will wield 2001:648::2001:0001::/64
 #the return value will be a new IPv6::Address object, so the original object remains intact
@@ -265,27 +259,27 @@ sub enumerate_with_IPv4 {
 	}
 	debug($binary);
 	my $new_prefixlen = $self->get_prefixlen + length($binary);
-	my $new_bitstr = $self->get_bitstr;
+	my $new_bitstr = to_str( $self->get_bitstr );
 	debug($new_bitstr);
 	substr($new_bitstr, ($self->get_prefixlen), length($binary)) = $binary;
 	debug("old bitstring is ".$self->get_bitstr);
 	debug("new bitstring is $new_bitstr");
 	debug($new_prefixlen);
-
-	return __PACKAGE__->raw_new($new_bitstr,$new_prefixlen);
+	
+	return __PACKAGE__->raw_new(from_str($new_bitstr),$new_prefixlen);
 }
 
 sub enumerate_with_offset {
 	my ($self,$offset,$desired_length) = (@_) or die 'Incorrect call';
 	my $to_replace_len = $desired_length - $self->get_prefixlen;
-	my $new_bitstr = $self->get_bitstr;
+	my $new_bitstr = to_str( $self->get_bitstr );
 	my $offset_bitstr = sprintf("%0*b",$to_replace_len,$offset);
 	debug("offset number is $offset (or: $offset_bitstr)");
 	#consistency check
 	die "Tried to replace $to_replace_len bits, but for $offset, ".length($offset_bitstr)." bits are required"
 		if(length($offset_bitstr) > $to_replace_len);
 	substr($new_bitstr, ($self->get_prefixlen), length($offset_bitstr) ) = $offset_bitstr;
-	return __PACKAGE__->raw_new($new_bitstr,$desired_length);
+	return __PACKAGE__->raw_new(from_str($new_bitstr),$desired_length);
 }
 
 sub increment {
@@ -295,7 +289,7 @@ sub increment {
 	die 'Sorry, offsets beyond 2^32-1 are not acceptable' if( $offset > $max_int );
 	die 'Sorry, cannot offset a /0 prefix. ' if ( $self->get_prefixlen == 0 );
 
-	my $new_bitstr = $self->get_bitstr; #will use it to store the new bitstr
+	my $new_bitstr = to_str( $self->get_bitstr ); #will use it to store the new bitstr
 
 	$DEBUG && print STDERR "Original bitstring is $new_bitstr\n";
 
@@ -324,11 +318,11 @@ sub increment {
 	substr( $new_bitstr , $start , $len ) = substr( $bstr, - $len); 
 
 	# result is ready, return it
-	return __PACKAGE__->raw_new($new_bitstr,$self->get_prefixlen);
+	return __PACKAGE__->raw_new(from_str($new_bitstr),$self->get_prefixlen);
 }
 
 sub nxx_parts {
-	( unpack($_[1],from_str($_[0]->get_bitstr))  )
+	unpack($_[1],$_[0]->get_bitstr)  
 }
 
 #@TODO add tests for this method
@@ -381,7 +375,7 @@ sub increment_multiple_prefixes {
 sub radius_string {
 	defined(my $self = shift) or die 'Missing argument';
 	#Framed-IPv6-Prefix := 0x0040200106482001beef
-	my $partial_bitstr = substr($self->get_bitstr,0,$self->get_prefixlen);
+	my $partial_bitstr = substr(to_str( $self->get_bitstr ),0,$self->get_prefixlen);
 	my $remain = $self->get_prefixlen % 8;
 	if($remain > 0) {
 		$partial_bitstr = $partial_bitstr . '0'x(8 - $remain);
