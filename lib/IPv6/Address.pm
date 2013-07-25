@@ -125,18 +125,19 @@ sub contains {
 sub addr_string {
 	my $self = shift(@_);
 	my $str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnnnn",$self->get_bitstr)) );
+	my $str2 = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnnnn",$self->get_bitstr)) );
 	#print Dumper(@_);
 	my %option = (@_) ;
 	#print Dumper(\%option);
 	if (defined($option{ipv4}) && $option{ipv4}) {
-		my $str2 = join(':',map { sprintf("%04x",$_) } (unpack("nnnnnnnn",$self->get_bitstr)) );
 		###print "string:",$str,"\n";
 		$str = join(':',map { sprintf("%x",$_) } (unpack("nnnnnn",$self->get_bitstr)) ).':'.join('.',  map {sprintf("%d",hex $_)} ($str2 =~ /([0-9A-Fa-f]{2})([0-9A-Fa-f]{2}):([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/));
 		#print STDERR $ipv4,"\n";
 		
 	}
 	#print 'DEBUG:' . $str,"\n";
-	return $str if defined(($option{nocompress}) && $option{nocompress});
+	return $str2 if $option{full};
+	return $str if $option{nocompress};
 	return '::' if($str eq '0:0:0:0:0:0:0:0');
 	for(my $i=7;$i>1;$i--) {
 		my $zerostr = join(':',split('','0'x$i));

@@ -34,6 +34,7 @@ is( unpack("B128", $ipv6->get_mask_bitstr), ('1'x64).('0'x64), 'check mask bitst
 is($ipv6->string(ipv4=>1,nocompress=>1),'2001:648:2000:de:0:0:0.0.2.16/64',"stringify without compression test");
 is($ipv6->string(ipv4=>1),'2001:648:2000:de::0.0.2.16/64',"stringify with IPv4");
 is($ipv6->string(nocompress=>1),'2001:648:2000:de:0:0:0:210/64',"stringify without compression");
+is($ipv6->string(full=>1),'2001:0648:2000:00de:0000:0000:0000:0210/64',"stringify with full expansion");
 is($ipv6->string,'2001:648:2000:de::210/64',"stringify plain vanilla");
 
 is(IPv6::Address->new('::/64')->string(ipv4=>1),'::0.0.0.0/64','IPv4 compatible all zeros');
