@@ -348,7 +348,7 @@ sub n_cmp {
 }
 
 sub n_sort { 
-	return sort { $a <=> $b } @_;
+	sort { $a <=> $b } @_;
 }
 
 sub increment_multiple_prefixes {
