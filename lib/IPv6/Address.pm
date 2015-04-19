@@ -1,13 +1,13 @@
 package IPv6::Address;
 
-=head1 NAME
+=head2 NAME
 
 IPv6::Address - IPv6 Address Manipulation Library
 
 =for html
 <img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
 
-=head1 SYNOPSIS
+=head2 SYNOPSIS
 
  use IPv6::Address;
 
@@ -34,7 +34,7 @@ IPv6::Address - IPv6 Address Manipulation Library
 
  $a->enumerate_with_offset( 5 , 64 ); #returns 2001:648:2000:4::/64 
 
-=head1 DESCRIPTION
+=head2 DESCRIPTION
 
 A pure Perl IPv6 address manipulation library. Emphasis on manipulation of
 prefixes and addresses. Very easy to understand and modify. The internal
@@ -720,15 +720,15 @@ sub calculate_compound_offset {
 	return;
 }
 
-=head1 AUTHOR
+=head2 AUTHOR
 
 Athanasios Douitsis C<< <aduitsis@cpan.org> >>
 
-=head1 SUPPORT
+=head2 SUPPORT
 
 Please open a ticket at L<https://github.com/aduitsis/IPv6-Address>. 
 
-=head1 COPYRIGHT & LICENSE
+=head2 COPYRIGHT & LICENSE
  
 Copyright 2008-2015 Athanasios Douitsis, all rights reserved.
  
