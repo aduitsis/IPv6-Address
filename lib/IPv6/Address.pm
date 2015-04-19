@@ -6,19 +6,30 @@ IPv6::Address - IPv6 Address Manipulation Library
 
 =head1 SYNOPSIS
 
- my $a = IPv6::Address->new('2001:648:2000::/48');
+ use IPv6::Address;
 
- $a->contains( '2001:648:2000::1/64'); # returns true
+ my $ipv6 = IPv6::Address->new('2001:648:2000::/48');
 
- say $a; #to print the address
+ $ipv6->contains('2001:648:2000::/64'); #true
 
- my @addresses = $a->split(3) ; returns 2^3=8 new IPv6::Addresses of prefix /51 
+ say $ipv6->to_string;
+ say $ipv6->string; # Same as previous
+ say $ipv6; # Same as previous
 
- $a->first_address;
+ say $ipv6->string(nocompress=>1); # do not compress using the :: notation
+ say $ipv6->string(ipv4=>1); #print the last 32 bits as an IPv4 address
+ 
+ $ipv6->addr_string; # Returns '2001:648:2000::'
+ 
+ $ipv6->split(4); # Split the prefix into 2^4 smaller prefixes. Returns a list.
+ 
+ $ipv6->apply_mask; # Apply the mask to the address. All bits beyond the mask length become 0.
 
- $a->last_address;
+ $ipv6->first_address;
 
- $a->enumerate_with_offset( 5 , 64 ); #returns 2001:648:2000::5/64 
+ $ipv6->last_address;
+
+ $a->enumerate_with_offset( 5 , 64 ); #returns 2001:648:2000:4::/64 
 
 =head1 DESCRIPTION
 
@@ -240,9 +251,17 @@ sub contains {
 
 =item C<addr_string>
 
-Returns the address part of the IPv6::Address, e.g.
-2001:648:2000:0000:0000:0000:0000:0000. The representation in a fully blown one,
-so it is always 8 parts separated by ':'.
+Returns the address part of the IPv6::Address. Using the option ipv4=>1 like 
+
+ $a->addr_string(ipv4=>1) 
+
+will make the last 32-bits appear as an IPv4 address. Also, using nocompress=1
+like 
+
+ $a->addr_string(nocompress=1) 
+
+will prevent the string from containing a '::' part. So it will be 8 parts
+separated by ':' colons. 
 
 =cut
 
