@@ -1,6 +1,39 @@
 package IPv6::Address;
 
-# ABSTRACT: IPv6 Address class
+=head1 NAME 
+
+IPv6::Address - IPv6 Address Manipulation Library
+
+=head1 SYNOPSIS
+
+ my $a = IPv6::Address->new('2001:648:2000::/48');
+
+ $a->contains( '2001:648:2000::1/64'); # returns true
+
+ say $a; #to print the address
+
+ my @addresses = $a->split(3) ; returns 2^3=8 new IPv6::Addresses of prefix /51 
+
+ $a->first_address;
+
+ $a->last_address;
+
+ $a->enumerate_with_offset( 5 , 64 ); #returns 2001:648:2000::5/64 
+
+=head1 DESCRIPTION
+
+A pure Perl IPv6 address manipulation library. Emphasis on manipulation of
+prefixes and addresses. Very easy to understand and modify. The internal
+representation of an IPv6::Address is a blessed hash with two keys, a prefix
+length (0-128 obviously) and a 128-bit string. A multitude of methods to do
+various tasks is provided. 
+
+
+=head2 Methods
+
+=over 12
+
+=cut
 
 use strict;
 use warnings;
@@ -20,6 +53,13 @@ sub debug {
 	$DEBUG&&print STDERR "\n";
 	
 }
+
+=item C<new( ipv6_string )>
+
+Takes a string representation of an IPv6 address and creates a corresponding
+IPv6::Address object.
+
+=cut
 
 #takes a normal address as argument. Example 2001:648:2000::/48
 sub new {
@@ -48,6 +88,13 @@ sub new {
 	},$class;		
 }
 
+=item C<raw_new( bitstr, length )>
+
+Creates a new IPv6::Address out of a bitstring and a prefix length. The
+bitstring must be binary, please do not use a '0' or '1' character string.
+
+=cut
+
 #takes a bitstr (0101010101111010010....) and a prefix length as arguments
 sub raw_new {
 	my $class = $_[0];
@@ -57,45 +104,99 @@ sub raw_new {
 	},$class;	
 }
 
+=item C<get_bitstr>
+
+Returns the bitstr of the object.
+
+=cut
+
 #returns the bitstr (11010111011001....)
 sub get_bitstr {
 	return $_[0]->{bitstr};
 }
 
 
+=item C<get_prefixlen>
+
+Returns the prefix length of the address.
+
+=cut
+
 #returns the length of the IPv6 address prefix
 sub get_prefixlen {
 	return $_[0]->{prefixlen};
 }
+
+=item C<get_mask_bitstr(length)>
+
+Returns a 128-bit string with the first prefix-length bits equal
+to 1, rest equal to 0. Essentially takes the prefix length of the object and
+returns a corresponding bit mask.
+
+=cut
 
 #returns a 1111100000 corresponding to the prefix length
 sub get_mask_bitstr {
 	generate_bitstr( $_[0]->get_prefixlen )
 }	
 
+=item C<get_masked_address_bitstr>
+
+Returns the bitstring, after zeroing out all the bits after the prefix length.
+Essentially applies the prefix mask to the address.
+
+=cut
 sub get_masked_address_bitstr {
 	generate_bitstr( $_[0]->get_prefixlen ) & $_[0]->get_bitstr;
 }
+
+=item C<generate_bitstr( number )>
+
+Not a method, returns 128-bit string, first n-items are 1, rest is 0. 
+
+=cut
 
 sub generate_bitstr { 
 	#TODO trick bellow is stupid ... fix
 	pack 'B128',join('',( ( map { '1' } ( 1 .. $_[0] ) ) , ( map { '0' } ( 1 .. 128-$_[0] ) ) ));
 }
 
+=item C<bitstr_and( bitstr1 , bitstr2 )>
+
+Not a method, AND's two bitstrings, returns result.
+
+=cut
 #takes two bitstrs as arguments and returns their logical or as bitstr
 sub bitstr_and {
 	return $_[0] & $_[1]
 }
 
+=item C<bitstr_or( bitstr1 , bitstr2)>
+
+Not a method, OR's two bitstrings, returns result.
+
+=cut
 #takes two bitstrs as arguments and returns their logical or as bitstr
 sub bitstr_or {
 	return $_[0] | $_[1]
 }
 
+=item C<bitstr_not( bitstr )>
+
+Not a method, inverts a bitstring.
+
+=cut
 #takes a bitstr and inverts it
 sub bitstr_not {
 	return ~ $_[0]
 }
+
+=item C<from_str( string_bitstring )>
+
+Not a method, takes a string of characters 0 or 1, returns corresponding binary
+bitstring.  Please do not use more than 128 characters, rest will be ignored.
+
+=cut
 
 #converts a bitstr (111010010010....)  to a binary string 
 sub from_str {
@@ -103,11 +204,27 @@ sub from_str {
 	return pack("B128",$str);
 }
 
+=item C<to_str( bitstring )>
+
+Not a method, takes a binary bitstring, returns a string composed of 0's and
+1's. Please supply bitstrings of max. 128 bits, rest of the bits will be
+ignored.
+
+=cut
+
 #converts from binary to literal bitstr
 sub to_str {
 	my $bitstr = shift(@_);
 	return join('',unpack("B128",$bitstr));
 }
+
+=item C<contains( other_address )>
+
+This method takes an argument which is either an IPv6::Address or a plain string
+that can be promoted to a valid IPv6::Address, and tests whether the object
+contains it. Obviously returns true or false.
+
+=cut
 
 sub contains {
 	defined( my $self = shift(@_) ) or die 'incorrect call';
@@ -120,6 +237,14 @@ sub contains {
 	#return 1 if (substr($self->get_bitstr,0,$self->get_prefixlen) eq substr($other->get_bitstr,0,$self->get_prefixlen));
 	return;
 }
+
+=item C<addr_string>
+
+Returns the address part of the IPv6::Address, e.g.
+2001:648:2000:0000:0000:0000:0000:0000. The representation in a fully blown one,
+so it is always 8 parts separated by ':'.
+
+=cut
 
 #returns the address part (2001:648:2000:0000:0000....)
 sub addr_string {
@@ -158,19 +283,35 @@ sub addr_string {
 	return $str;
 }
 
+=item C<string>
+
+Returns the full IPv6 address, with the prefix in its end.
+
+=cut
+
 #returns the full IPv6 address 
 sub string {
 	my $self = shift(@_);
 	return $self->addr_string(@_).'/'.$self->get_prefixlen;
 }
 
+=item C<to_string>
+
+Used internally by the overload module.
+
+=cut
 #to be used by the overload module
 sub to_string {
 	return $_[0]->string();
 }
 
-#splits the address to the order of two of the number given as first argument.
-#example: if argument is 3, 2^3=8, address is split into 8 parts
+=item C<split( exponent , target_length )>
+
+Splits the address to the order of two of the number given as first argument.
+Example: if argument is 3, 2^3=8, address is split into 8 parts. The final parts
+have prefix length equal to the target_length specified in the second argument.
+
+=cut
 sub split {
 	my $self = shift(@_);
 	my $split_length = shift(@_);#example: 3
@@ -187,28 +328,57 @@ sub split {
 }
 
 	
-#applies the prefix length mask to the address. Does not return anything. Works on $self.
+=item C<apply_mask>
+
+Applies the prefix length mask to the address. Does not return anything. Works on $self. 
+B<WARNING:>This will alter the object.
+
+=cut
 sub apply_mask {
 	my $self = shift(@_);
 	$self->{bitstr} = bitstr_and($self->get_bitstr,$self->get_mask_bitstr);
 }	
+
+=item C<first_address>
+
+Returns the first address of the prefix that is represented by the object. E.g.
+consider 2001:648:2000::1234/64. First address will be 2001:648:2000::/64. 
+
+=cut
 
 sub first_address {
 	my $bitstr = bitstr_and( $_[0]->get_bitstr , $_[0]->get_mask_bitstr );
 	IPv6::Address->raw_new( $bitstr, $_[0]->get_prefixlen);
 }
 
+=item C<last_address>
+
+Returns the last address of the prefix that is represented by the object. E.g.
+consider 2001:648:2000::1234/64. Last address will be
+2001:648:2000::ffff:ffff:ffff:ffff/64. 
+
+=cut
 sub last_address {
 	my $bitstr = bitstr_or( $_[0]->get_bitstr , bitstr_not( $_[0]->get_mask_bitstr ) );
 	IPv6::Address->raw_new( $bitstr, $_[0]->get_prefixlen);
 }
 	
 
+=item C<is_unspecified> , C<is_loopback> , C<is_multicast>
+
+Returns true or false depending on whether the address falls into the
+corresponding category stated by the method name. E.g. 
+
+ IPv6::Address->new('::1')->is_loopback # returns true
+
+=cut
+
 my %patterns = (
 	unspecified => "^::\$",
 	loopback => "^::1\$",
 	multicast => "^ff",
 );
+#@TODO: implement this
 my %binary_patterns = (
 	"link-local unicast" => "^",
 );
@@ -224,16 +394,14 @@ for my $item (keys %patterns) {
 	});
 }
 
-
-
 use strict;
 
-#sub is_multicast {
-	#in order for an address to be multicast ipv6, the first 8 bits must be 1. So:
-#	return ($_[0]->get_bitstr =~ /^11111111/)? 1 :0;
-#}	
+=item C<ipv4_to_binarray>
 
+Not a method, takes an IPv4 address, returns a character string consisting of 32
+characters that are 0 or 1. Used internally, not too useful for the end user.
 
+=cut
 sub ipv4_to_binarray {
 	defined( my $ipv4 = shift ) or die 'Missing IPv4 address argument';
 	my @parts = ( split('\.',$ipv4) );
@@ -244,10 +412,19 @@ sub ipv4_to_binarray {
 
 
 
+=item C<enumerate_with_IPv4( ipv4, mask )>
 
-#takes an IPv4 address and uses a part of it to enumerate inside the Ipv6 prefix of the object
-#example: __PACKAGE__->new('2001:648:2001::/48')->enumerate_with_IPv4('0.0.0.1',0x0000ffff) will wield 2001:648::2001:0001::/64
-#the return value will be a new IPv6::Address object, so the original object remains intact
+Takes an IPv4 address and uses a part of it to enumerate inside the Ipv6 prefix
+of the object. E.g.
+
+ IPv6::Address->new('2001:648:2001::/48')->enumerate_with_IPv4('0.0.0.1',0x0000ffff) #will yield 2001:648::2001:0001::/64
+
+The return value will be a new IPv6::Address object, so the original object
+remains intact. The part that will be used as an offset is extracted from the
+ipv4 by using the mask. 
+
+=cut
+
 sub enumerate_with_IPv4 {
 	my ($self,$IPv4,$mask) = (@_) or die 'Incorrect call';
 	my $binmask = sprintf "%032b",$mask;
@@ -270,6 +447,16 @@ sub enumerate_with_IPv4 {
 	return __PACKAGE__->raw_new(from_str($new_bitstr),$new_prefixlen);
 }
 
+=item C<enumerate_with_offset( offset, desired_length )>
+
+Takes a non-negative integer offset and returns a prefix whose relative position
+inside the object is defined by the offset. The prefix length of the result is
+defined by the second argument. E.g.
+
+ IPv6::Address->new('2001:648:2000::/48')->enumerate_with_offset( 5 , 64 ) #2001:648:2000:4::/64
+
+=cut
+
 sub enumerate_with_offset {
 	my ($self,$offset,$desired_length) = (@_) or die 'Incorrect call';
 	my $to_replace_len = $desired_length - $self->get_prefixlen;
@@ -282,6 +469,14 @@ sub enumerate_with_offset {
 	substr($new_bitstr, ($self->get_prefixlen), length($offset_bitstr) ) = $offset_bitstr;
 	return __PACKAGE__->raw_new(from_str($new_bitstr),$desired_length);
 }
+
+=item C<increment( offset )>
+
+Increments the IPv6::Address object by offset. Offsets larger than 2^32-1 are
+not acceptable. This method is probably not too useful, but is provided for
+completeness.
+
+=cut
 
 sub increment {
 	my ( $self , $offset ) = (@_) or die 'Incorrect call';
@@ -322,19 +517,50 @@ sub increment {
 	return __PACKAGE__->raw_new(from_str($new_bitstr),$self->get_prefixlen);
 }
 
+=item C<nxx_parts(unpack_format)>
+
+Takes the bitstring of the address and unpacks it using the first argument.
+Internal use mostly.
+
+=cut
+
 sub nxx_parts {
 	unpack($_[1],$_[0]->get_bitstr)  
 }
+
+=item C<n16_parts>
+
+Splits the address into an 8-item array of unsigned short integers. Network byte
+order is implied, a short integer is 16-bits long.
+
+=cut
 
 #@TODO add tests for this method
 sub n16_parts {
 	( $_[0]->nxx_parts('nnnnnnnn') )
 }
 
+=item C<n16_parts>
+
+Splits the address into an 4-item array of unsigned long integers. Network byte
+order is implied, a long integer is 32-bits long.
+
+=cut
 #@TODO add tests for this method
 sub n32_parts {
 	( $_[0]->nxx_parts('NNNN') )
 }
+
+=item C<n_cmp( a , b )>
+
+Takes two 128-bit bitstr arguments, compares them and returns the result as -1,
+0 or 1. The semantics are the same as that of the spaceship operator <=>. 
+
+This method will overload the <=> operator for IPv6::Address objects, so
+comparing IPv6::Address objects like they were integers produces the correct
+results.
+
+=cut
 
 #@TODO add tests for this method
 sub n_cmp { 
@@ -347,31 +573,23 @@ sub n_cmp {
 	return 0;
 }
 
+=item C<n_sort( array )>
+
+Sorts an array of bitstrs using the n_cmp function.
+
+=cut
+
 sub n_sort { 
 	sort { $a <=> $b } @_;
 }
 
-sub increment_multiple_prefixes {
-	defined( my $offset = shift ) or die 'incorrect call';
-	my %prefixes = @_ or confess 'no prefixes given';
-	my %real_prefixes = map { $_ => IPv6::Address->new( $_ ) } keys %prefixes;
-	my @sorted_prefixes = sort { $real_prefixes{$a} <=> $real_prefixes{$b} } keys %prefixes;
+=item C<radius_string>
 
-	my $offset_orig = $offset;
+Returns a string suitable to be returned as an IPv6 Radius AV-pair. See RFC 3162
+for an explanation of the format. 
 
-	for( @sorted_prefixes ) {
-		my $length = $prefixes{ $_ };
-		if( 1 + $offset >  $length   ) {
-			$offset -= $length ;
-			next;
-		}
-		else {
-			my $ipv6 = $real_prefixes{ $_ } ;
-			return $ipv6->increment( $offset );
-		}
-	}
-	die "cannot increment offset $offset_orig on ".join(',',@sorted_prefixes);
-}
+=back 
+=cut
 
 sub radius_string {
 	defined(my $self = shift) or die 'Missing argument';
@@ -480,16 +698,23 @@ sub calculate_compound_offset {
 	return;
 }
 
+=head1 AUTHOR
+
+Athanasios Douitsis C<< <aduitsis@cpan.org> >>
+
+=head1 SUPPORT
+
+Please open a ticket at L<https://github.com/aduitsis/IPv6-Address>. 
+
 =head1 COPYRIGHT & LICENSE
  
-Copyright 2008 Athanasios Douitsis, all rights reserved.
+Copyright 2008-2015 Athanasios Douitsis, all rights reserved.
  
 This program is free software; you can use it
 under the terms of Artistic License 2.0 which can be found at 
 http://www.perlfoundation.org/artistic_license_2_0
  
 =cut
-
 
 1;
 		
