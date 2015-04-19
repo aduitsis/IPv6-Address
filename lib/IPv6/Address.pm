@@ -1,7 +1,5 @@
 package IPv6::Address;
 
-# ABSTRACT: IPv6 Address Manipulation Library
-
 =head1 NAME
 
 IPv6::Address - IPv6 Address Manipulation Library

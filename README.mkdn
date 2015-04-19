@@ -2,9 +2,10 @@
 
 IPv6::Address - IPv6 Address Manipulation Library
 
-# VERSION
+<div>
 
-version 0.1
+    <img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
+</div>
 
 # SYNOPSIS
 
@@ -219,14 +220,6 @@ various tasks is provided.
     Returns a string suitable to be returned as an IPv6 Radius AV-pair. See RFC 3162
     for an explanation of the format. 
 
-# NAME
-
-IPv6::Address - IPv6 Address Manipulation Library
-
-<div>
-    <img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
-</div>
-
 # AUTHOR
 
 Athanasios Douitsis `<aduitsis@cpan.org>`
@@ -242,15 +235,3 @@ Copyright 2008-2015 Athanasios Douitsis, all rights reserved.
 This program is free software; you can use it
 under the terms of Artistic License 2.0 which can be found at 
 http://www.perlfoundation.org/artistic\_license\_2\_0
-
-# AUTHOR
-
-Athanasios Douitsis <aduitsis@cpan.org>
-
-# COPYRIGHT AND LICENSE
-
-This software is Copyright (c) 2015 by Athanasios Douitsis.
-
-This is free software, licensed under:
-
-    The Artistic License 2.0 (GPL Compatible)
