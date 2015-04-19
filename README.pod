@@ -2,6 +2,9 @@
 
 IPv6::Address
 
+=for html
+<img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
+
 =head1 DESCRIPTION
 
 Yet another class to represent and manipulate IPv6 Addresses. Includes a rudimentary IPv4 calculator library.
