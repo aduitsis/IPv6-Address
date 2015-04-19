@@ -1,8 +1,13 @@
 package IPv6::Address;
 
-=head1 NAME 
+# ABSTRACT: IPv6 Address Manipulation Library
+
+=head1 NAME
 
 IPv6::Address - IPv6 Address Manipulation Library
+
+=for html
+<img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
 
 =head1 SYNOPSIS
 
