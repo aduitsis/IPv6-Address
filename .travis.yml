@@ -1,6 +1,8 @@
 language: perl
 
-script: prove -lr t
+script: 
+  - prove -lr t
+  - cover -test -report coveralls
 
 perl:
   - "blead"
@@ -14,3 +16,4 @@ perl:
 before_install:
   - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
   - source ~/travis-perl-helpers/init --auto
+  - cpanm -n Devel::Cover::Report::Coveralls
