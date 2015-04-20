@@ -2,6 +2,10 @@
 
 IPv6::Address - IPv6 Address Manipulation Library
 
+# VERSION
+
+version 0.2
+
 <div>
 
     <a href="https://travis-ci.org/aduitsis/IPv6-Address"><img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master"></a>
