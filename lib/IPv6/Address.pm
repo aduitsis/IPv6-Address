@@ -1,4 +1,8 @@
+use strict;
+use warnings;
+
 package IPv6::Address;
+
 
 =head1 NAME
 
