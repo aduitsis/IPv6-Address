@@ -5,7 +5,8 @@ package IPv6::Address;
 IPv6::Address - IPv6 Address Manipulation Library
 
 =for html
-<img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master">
+<a href="https://travis-ci.org/aduitsis/IPv6-Address"><img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master"></a>
+<a href='https://coveralls.io/r/aduitsis/IPv6-Address?branch=master'><img src='https://coveralls.io/repos/aduitsis/IPv6-Address/badge.svg?branch=master' alt='Coverage Status' /></a> 
 
 =head1 SYNOPSIS
 
