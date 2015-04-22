@@ -2,3 +2,6 @@
 /IPv6-Address-*
 /.build
 !META.json
+*~
+*.swp
+*.swo
