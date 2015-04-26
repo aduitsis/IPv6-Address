@@ -10,7 +10,8 @@ IPv6::Address - IPv6 Address Manipulation Library
 
 =for html
 <a href="https://travis-ci.org/aduitsis/IPv6-Address"><img src="https://travis-ci.org/aduitsis/IPv6-Address.svg?branch=master"></a>
-<a href='https://coveralls.io/r/aduitsis/IPv6-Address?branch=master'><img src='https://coveralls.io/repos/aduitsis/IPv6-Address/badge.svg?branch=master' alt='Coverage Status' /></a> 
+<a href='https://coveralls.io/r/aduitsis/IPv6-Address?branch=master'><img src='https://coveralls.io/repos/aduitsis/IPv6-Address/badge.svg?branch=master' alt='Coverage Status' /></a>
+
 
 =head1 SYNOPSIS
 
@@ -29,8 +30,8 @@ IPv6::Address - IPv6 Address Manipulation Library
  
  $ipv6->addr_string; # Returns '2001:648:2000::'
  
- $ipv6->split(4); # Split the prefix into 2^4 smaller prefixes. Returns a list.
- 
+ $ipv6->split(4); # Split the prefix into 2^4 smaller prefixes. Returns a list.  
+
  $ipv6->apply_mask; # Apply the mask to the address. All bits beyond the mask length become 0.
 
  $ipv6->first_address;

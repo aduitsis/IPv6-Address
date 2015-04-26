@@ -1,5 +1,3 @@
-#!/usr/bin/perl 
-
 use warnings;
 use strict;
 use Test::More qw(no_plan);
@@ -26,7 +24,7 @@ for my $address_str (keys %addresses) {
 	ok($ipv6 eq $addresses{$address_str},"stringify check");
 	#print $ipv6->string," ",$addresses{$address_str},"\n";
 }
-	
+
 my $ipv6 = IPv6::Address->new("2001:648:2000:de::210/64");
 
 is( unpack("B128", $ipv6->get_mask_bitstr), ('1'x64).('0'x64), 'check mask bitstring');
@@ -136,7 +134,8 @@ eval {
 is($p2->enumerate_with_offset(65535,64),'2001:648:2001:ffff::/64');
 };
 ok($@,'enumerate with offset larger than the set bit length should fail');
- 
+
+
 
 is($p1->radius_string,'0x0030200106482001',"radius representation");
 is($p2->radius_string,'0x003120010648200100',"radius representation");
