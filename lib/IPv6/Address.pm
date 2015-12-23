@@ -646,6 +646,14 @@ sub new {
 	bless { ip_n => my_aton($ip) , length_n => $length_n } , $class	;
 }
 
+sub new_from_start_stop { 
+	$_[0]->new( $_[1].'/'.(32 - log(  ( my_aton($_[1]) ^ my_aton($_[2]) )  + 1)/log(2)))
+}
+
+sub to_string { 
+	$_[0]->get_start_ip . '/' . $_[0]->get_length_n
+}
+
 sub get_ip_n {
 	return $_[0]->{ip_n} ;
 }

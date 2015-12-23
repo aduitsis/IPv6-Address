@@ -230,4 +230,6 @@ ok( ( $a[0] == $p1 ) && ( $a[1] == $p2 ) && ( $a[2] == $p4 ) && ( $a[3] == $p3 )
 #my $p3 = IPv6::Address->new('2001:648:2001:beef::/64');
 #my $p4 = IPv6::Address->new('2001:648:2001:be00::/56');
 #my $p5 = IPv6::Address->new('2001:648:2001:beef::/128');
-
+my $alt = IPv4Subnet->new_from_start_stop('147.102.0.0','147.102.255.255');
+my $str = $alt->to_string;
+ok( $str eq '147.102.0.0/16', 'new from start/stop seems to be working');
