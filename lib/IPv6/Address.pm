@@ -642,7 +642,7 @@ use Data::Dumper;
 sub new {
 	defined ( my $class = shift ) or die "missing class";
 	defined ( my $str = shift ) or die "missing string";
-	my ( $ip , $length_n ) = ( $str =~ /^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/ ) or croak 'Cannot parse $str';
+	my ( $ip , $length_n ) = ( $str =~ /^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/ ) or croak "Cannot parse $str";
 	bless { ip_n => my_aton($ip) , length_n => $length_n } , $class	;
 }
 
