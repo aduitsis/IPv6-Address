@@ -264,10 +264,10 @@ Returns the address part of the IPv6::Address. Using the option ipv4=>1 like
 
  $a->addr_string(ipv4=>1) 
 
-will make the last 32-bits appear as an IPv4 address. Also, using nocompress=1
+will make the last 32-bits appear as an IPv4 address. Also, using nocompress=>1
 like 
 
- $a->addr_string(nocompress=1) 
+ $a->addr_string( nocompress => 1 ) 
 
 will prevent the string from containing a '::' part. So it will be 8 parts
 separated by ':' colons. 
