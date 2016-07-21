@@ -1,5 +1,9 @@
 Revision history for Perl module IPv6::Address
 
+0.206 2016-07-21
+
+  * Remove Perl blead from Travis conf
+
 0.204 2016-07-21
 
   * Add enumerate method to IPv4Subnet

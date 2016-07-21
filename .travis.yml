@@ -5,7 +5,7 @@ script:
   - cover -test -report coveralls
 
 perl:
-  - "blead"
+#  - "blead"
   - "5.22"
   - "5.20"
   - "5.18"
