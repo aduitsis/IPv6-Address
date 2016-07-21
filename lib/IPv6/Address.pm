@@ -678,6 +678,10 @@ sub get_length {
 	return 2**(32-$_[0]->get_length_n);
 }
 
+sub enumerate {
+	map { my_ntoa( $_ ) } ($_[0]->get_start .. $_[0]->get_stop)
+}
+
 sub get_length_n {
 	return $_[0]->{length_n};
 }

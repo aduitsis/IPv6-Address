@@ -233,3 +233,11 @@ ok( ( $a[0] == $p1 ) && ( $a[1] == $p2 ) && ( $a[2] == $p4 ) && ( $a[3] == $p3 )
 my $alt = IPv4Subnet->new_from_start_stop('147.102.0.0','147.102.255.255');
 my $str = $alt->to_string;
 ok( $str eq '147.102.0.0/16', 'new from start/stop seems to be working');
+
+my @aaa = IPv4Subnet->new('147.102.1.0/24')->enumerate;
+
+ok( @aaa == 256, 'enumerate returns correct number of items' );
+
+is( $aaa[0],'147.102.1.0' , 'first item of enumeration is correct' );
+is( $aaa[9],'147.102.1.9' , 'item of enumeration is correct' );
+is( $aaa[255],'147.102.1.255' , 'last item of enumeration is correct' );
