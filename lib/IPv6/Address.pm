@@ -679,7 +679,14 @@ sub get_length {
 }
 
 sub enumerate {
-	map { my_ntoa( $_ ) } ($_[0]->get_start .. $_[0]->get_stop)
+	# in 32-bit systems, this seems to fail with error:
+	# "Range iterator outside integer range"
+	#map { my_ntoa( $_ ) } ($_[0]->get_start .. $_[0]->get_stop)
+	my @ret;
+	for( my $i = $_[0]->get_start ; $i <= $_[0]->get_stop ; $i++ ) {
+		push @ret,my_ntoa( $i )
+	}
+	return @ret
 }
 
 sub get_length_n {
