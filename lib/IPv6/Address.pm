@@ -715,6 +715,17 @@ sub my_ntoa {
 	return inet_ntoa(pack('N',$_[0]));
 }
 
+sub between {
+	my $a = shift // die 'missing 1st argument';
+	my $b = shift // die 'missing 2nd argument';
+	my $c = shift // die 'missing 3rd argument';
+	my $d = IPv4Subnet->new( $a.'/32' );
+	my $e = IPv4Subnet->new( $b.'/32' );
+	my $f = IPv4Subnet->new( $c.'/32' );
+
+	return ( $d->get_ip_n <= $e->get_ip_n ) && ( $e->get_ip_n <= $f->get_ip_n )
+}
+
 sub position { 
 	my $self = shift;
 	defined ( my  $arg = shift ) or die "Incorrect call";
