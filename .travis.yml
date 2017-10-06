@@ -19,4 +19,5 @@ before_install:
   - source ~/travis-perl-helpers/init --auto
   - cpanm -n Devel::Cover
   - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Test::Perl::Critic
 
